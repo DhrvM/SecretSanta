@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000/api' : 'https://secretsanta-2wbb.onrender.com/api')
 
 export async function createParty(partyData) {
   const response = await fetch(`${API_URL}/party`, {
