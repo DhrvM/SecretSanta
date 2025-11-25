@@ -8,6 +8,7 @@ from app.schemas.participant import (
     ParticipantUpdate
 )
 from app.schemas.party import PartyAdminAction
+from app.utils.email import send_match_email
 from typing import List
 
 router = APIRouter(prefix="/api/party/{party_id}/participants", tags=["Participants"])
@@ -144,7 +145,9 @@ def resend_my_match(party_id: str, request: ResendMyMatch):
     if not party_response.data:
         raise HTTPException(status_code=404, detail="Party not found")
     
-    if party_response.data[0]["status"]:  # Party is still open
+    party = party_response.data[0]
+    
+    if party["status"]:  # Party is still open
         raise HTTPException(status_code=400, detail="Matching has not started yet.")
     
     # Find participant
@@ -152,7 +155,20 @@ def resend_my_match(party_id: str, request: ResendMyMatch):
     
     if not participant_response.data:
         raise HTTPException(status_code=404, detail="Email not found in this party.")
+        
+    participant = participant_response.data[0]
     
-    # TODO: Resend email via utils/email.py
+    if not participant.get('giftee_id'):
+         raise HTTPException(status_code=400, detail="You have not been assigned a match yet.")
+         
+    # Get giftee name
+    giftee_response = supabase.table("participants").select("name").eq("id", participant['giftee_id']).execute()
+    if not giftee_response.data:
+        raise HTTPException(status_code=500, detail="Match not found in database.")
+        
+    giftee_name = giftee_response.data[0]['name']
     
-    return {"message": "Match email has been resent."}
+    if send_match_email(participant, giftee_name, party):
+        return {"message": "Match email has been resent."}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")

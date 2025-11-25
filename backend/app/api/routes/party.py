@@ -6,6 +6,8 @@ from app.schemas.party import (
     PartyCreatedResponse,
     PartyAdminAction,
 )
+from app.utils.matching import generate_matches
+from app.utils.email import send_match_email
 
 router = APIRouter(prefix="/api/party", tags=["Party"])
 
@@ -108,8 +110,23 @@ def lock_party_and_match(party_id: str, auth: PartyAdminAction):
     if len(participants) < 2:
         raise HTTPException(status_code=400, detail="Need at least 2 participants to start matching")
     
-    # TODO: Call matching algorithm from utils/matching.py
-    # TODO: Send emails via utils/email.py
+    # 1. Generate Matches
+    try:
+        updates = generate_matches(participants)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Matching failed: {str(e)}")
+    
+    # 2. Update DB
+    for update in updates:
+        supabase.table("participants").update({"giftee_id": update["giftee_id"]}).eq("id", update["id"]).execute()
+        
+    # 3. Send Emails
+    name_map = {p['id']: p['name'] for p in participants}
+    
+    for p in participants:
+        match_entry = next(u for u in updates if u['id'] == p['id'])
+        giftee_name = name_map[match_entry['giftee_id']]
+        send_match_email(p, giftee_name, party)
     
     # Lock the party
     supabase.table("parties").update({"status": False}).eq("id", party_id).execute()
@@ -135,7 +152,20 @@ def resend_all_emails(party_id: str, auth: PartyAdminAction):
     if party["status"]:  # Party is still open
         raise HTTPException(status_code=400, detail="Matching has not started yet.")
     
-    # TODO: Resend all emails via utils/email.py
+    # Get participants
+    participants = supabase.table("participants").select("*").eq("party_id", party_id).execute().data
     
-    return {"message": "All match emails have been resent."}
+    if not participants:
+        return {"message": "No participants found."}
 
+    # Map names
+    name_map = {p['id']: p['name'] for p in participants}
+    
+    count = 0
+    for p in participants:
+        if p.get('giftee_id'):
+            giftee_name = name_map.get(p['giftee_id'], "Unknown")
+            if send_match_email(p, giftee_name, party):
+                count += 1
+                
+    return {"message": f"Resent {count} emails."}

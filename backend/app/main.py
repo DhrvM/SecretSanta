@@ -4,10 +4,11 @@ from app.api.routes import party, participant
 
 app = FastAPI(title="Secret Santa API")
 
-# Enable CORS so your local Frontend can talk to this Backend
+# Enable CORS so your Frontend can talk to this Backend
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://dhrvm.github.io",  # GitHub Pages deployment
 ]
 
 app.add_middleware(
