@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 from app.db.supabase import supabase
-from app.schemas.participant import ParticipantJoin, ParticipantPublic, ResendMyMatch
+from app.schemas.participant import (
+    ParticipantJoin, 
+    ParticipantPublic, 
+    ParticipantPrivate, 
+    ResendMyMatch,
+    ParticipantUpdate
+)
 from app.schemas.party import PartyAdminAction
 from typing import List
 
@@ -18,6 +24,23 @@ def list_participants(party_id: str):
     
     response = supabase.table("participants").select("id, name").eq("party_id", party_id).execute()
     
+    return response.data
+
+
+@router.post("/admin", response_model=List[ParticipantPrivate])
+def list_participants_admin(party_id: str, auth: PartyAdminAction):
+    """List all participants with emails. Requires master passcode."""
+    
+    # Verify passcode
+    party_response = supabase.table("parties").select("passcode").eq("id", party_id).execute()
+    
+    if not party_response.data:
+        raise HTTPException(status_code=404, detail="Party not found")
+    
+    if party_response.data[0]["passcode"] != auth.passcode:
+        raise HTTPException(status_code=403, detail="Invalid passcode")
+        
+    response = supabase.table("participants").select("id, name, email").eq("party_id", party_id).execute()
     return response.data
 
 
@@ -51,6 +74,38 @@ def join_party(party_id: str, participant: ParticipantJoin):
     if not response.data:
         raise HTTPException(status_code=500, detail="Failed to join party")
     
+    return response.data[0]
+
+
+@router.patch("/{participant_id}", response_model=ParticipantPrivate)
+def update_participant(party_id: str, participant_id: str, update_data: ParticipantUpdate):
+    """Update a participant's details. Requires master passcode."""
+    
+    # Verify passcode
+    party_response = supabase.table("parties").select("passcode").eq("id", party_id).execute()
+    
+    if not party_response.data:
+        raise HTTPException(status_code=404, detail="Party not found")
+    
+    if party_response.data[0]["passcode"] != update_data.passcode:
+        raise HTTPException(status_code=403, detail="Invalid passcode")
+        
+    # Prepare update data
+    data_to_update = {}
+    if update_data.new_email:
+        data_to_update["email"] = update_data.new_email
+    if update_data.new_name:
+        data_to_update["name"] = update_data.new_name
+        
+    if not data_to_update:
+        raise HTTPException(status_code=400, detail="No data to update")
+        
+    # Perform update
+    response = supabase.table("participants").update(data_to_update).eq("id", participant_id).eq("party_id", party_id).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Participant not found")
+        
     return response.data[0]
 
 
@@ -101,4 +156,3 @@ def resend_my_match(party_id: str, request: ResendMyMatch):
     # TODO: Resend email via utils/email.py
     
     return {"message": "Match email has been resent."}
-

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date, time
-from typing import Optional
+from typing import Optional, Union
 
 
 # --- Request Schemas ---
@@ -13,7 +13,7 @@ class PartyCreate(BaseModel):
     budget: Optional[int] = None
     currency: str
     event_date: date
-    event_time: time
+    event_time: Union[time, str] # Allow string input too just in case
     organizer_name: str
     organizer_email: EmailStr
     participate: bool = True  # Should the organizer be added as a participant?
@@ -34,7 +34,7 @@ class PartyResponse(BaseModel):
     budget: Optional[int]
     currency: str
     event_date: date
-    event_time: time
+    event_time: str # Changed from time to str to handle timezone strings from DB
     organizer_name: str
     organizer_email: EmailStr
     status: bool  # True = OPEN, False = LOCKED
@@ -45,4 +45,3 @@ class PartyCreatedResponse(BaseModel):
     id: str
     passcode: str  # Only shown once at creation time
     name: str
-

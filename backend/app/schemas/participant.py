@@ -16,6 +16,13 @@ class ResendMyMatch(BaseModel):
     email: EmailStr
 
 
+class ParticipantUpdate(BaseModel):
+    """Schema for updating a participant (admin only)"""
+    passcode: str
+    new_email: Optional[EmailStr] = None
+    new_name: Optional[str] = None
+
+
 # --- Response Schemas ---
 
 class ParticipantPublic(BaseModel):
@@ -29,4 +36,3 @@ class ParticipantPrivate(BaseModel):
     id: UUID
     name: str
     email: EmailStr
-
