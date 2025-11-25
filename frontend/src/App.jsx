@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import LandingPage from './pages/LandingPage'
 import CreateParty from './pages/CreateParty'
@@ -20,9 +20,9 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <BrowserRouter basename="/SecretSanta">
+    <HashRouter>
       <AnimatedRoutes />
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
