@@ -45,7 +45,7 @@ def create_party(party: PartyCreate):
     # -----------------------------------------------------------
     #  SEND HOST EMAIL (THIS IS THE CORRECT PLACE)
     # -----------------------------------------------------------
-    room_link = f"https://your-frontend.com/room/{created_party['id']}"
+    room_link = f"https://dhrvm.github.io/SecretSanta/#/party/{created_party['id']}"
     
     send_host_email(
         host={
