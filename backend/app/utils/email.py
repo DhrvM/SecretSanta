@@ -70,3 +70,43 @@ def send_match_email(participant, giftee_name, party_details):
     """
     
     return send_email(participant['email'], subject, html)
+
+def send_host_email(host, party_details, room_code, room_link):
+    """
+    Sends the host their unique room code + room link.
+    """
+    subject = f"🎄 Your Secret Santa Room Is Ready, {host['name']}!"
+
+    html = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #fff;">
+        <h1 style="color: #d42426; text-align: center;">Your Secret Santa Room is Ready!</h1>
+        
+        <p>Hi <strong>{host['name']}</strong>,</p>
+        <p>Your Secret Santa party has been created successfully. Here are your host details:</p>
+
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #d42426; margin: 20px 0;">
+            <p><strong>🎉 Party:</strong> {party_details['name']}</p>
+            <p><strong>📅 Date:</strong> {party_details['event_date']} @ {str(party_details['event_time'])[:5]}</p>
+            <p><strong>💰 Budget:</strong> {party_details['budget']} {party_details['currency']}</p>
+        </div>
+
+        <h3>Your Room Access</h3>
+        <p><strong>🔐 Passcode:</strong> <span style="font-size: 18px;">{room_code}</span></p>
+        
+        <p><strong>🔗 Room Link:</strong><br>
+            <a href="{room_link}" style="color: #d42426; text-decoration: none; font-size: 18px;">
+                {room_link}
+            </a>
+        </p>
+
+        <p>You can share this link + passcode with your participants so they can join the room.</p>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p style="color: #666; font-size: 12px; text-align: center;">
+            Powered by <a href="https://dhrvm.github.io/SecretSanta/" style="color: #d42426; text-decoration: none;">Secret Santa Matcher</a>
+        </p>
+    </div>
+    """
+
+    return send_email(host['email'], subject, html)

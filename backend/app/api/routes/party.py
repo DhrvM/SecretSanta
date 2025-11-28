@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from app.db.supabase import supabase
+from app.utils.email import send_match_email, send_host_email
+
 from app.schemas.party import (
     PartyCreate,
     PartyResponse,
@@ -39,6 +41,30 @@ def create_party(party: PartyCreate):
     
     created_party = response.data[0]
     
+    
+    # -----------------------------------------------------------
+    #  SEND HOST EMAIL (THIS IS THE CORRECT PLACE)
+    # -----------------------------------------------------------
+    room_link = f"https://your-frontend.com/room/{created_party['id']}"
+    
+    send_host_email(
+        host={
+            "name": created_party["organizer_name"],
+            "email": created_party["organizer_email"],
+        },
+        party_details={
+            "name": created_party["name"],
+            "event_date": created_party["event_date"],
+            "event_time": created_party["event_time"],
+            "budget": created_party["budget"],
+            "currency": created_party["currency"],
+        },
+        room_code=created_party["passcode"],
+        room_link=room_link
+    )
+    # -----------------------------------------------------------
+    
+
     # If organizer wants to participate, add them as first participant
     if party.participate:
         participant_data = {
@@ -53,6 +79,7 @@ def create_party(party: PartyCreate):
         passcode=created_party["passcode"],
         name=created_party["name"],
     )
+
 
 
 @router.get("/{party_id}", response_model=PartyResponse)
