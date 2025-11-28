@@ -59,11 +59,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-API docs are available once the server is running:
 
-- Swagger: http://127.0.0.1:8000/docs
-- ReDoc:  http://127.0.0.1:8000/redoc
-
+#
 The backend includes a `README.md` at `backend/README.md` with more details on routes, database schema and env vars.
 
 ---
