@@ -17,7 +17,7 @@ export default function CreateParty() {
     organizer_name: '',
     organizer_email: '',
     event_date: '',
-    event_time: '', // Will store "10:00 AM" string or similar
+    event_time: '12:00 PM',
     budget: '',
     currency: 'USD',
     participate: true,
@@ -25,6 +25,27 @@ export default function CreateParty() {
   })
 
   const [createdParty, setCreatedParty] = useState(null)
+
+  const HOURS = Array.from({ length: 12 }, (_, i) => (i + 1).toString())
+  const MINUTES = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'))
+
+  const handleTimeChange = (type, value) => {
+    const [timeStr, period] = formData.event_time.split(' ')
+    const [hour, minute] = timeStr.split(':')
+    
+    let newHour = hour
+    let newMinute = minute
+    let newPeriod = period
+
+    if (type === 'hour') newHour = value
+    if (type === 'minute') newMinute = value
+    if (type === 'period') newPeriod = value
+
+    setFormData(prev => ({
+      ...prev,
+      event_time: `${newHour}:${newMinute} ${newPeriod}`
+    }))
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -60,7 +81,7 @@ export default function CreateParty() {
   }
 
   const copyLink = () => {
-    const link = `${window.location.origin}/SecretSanta/party/${createdParty.id}`
+    const link = `${window.location.origin}/SecretSanta/#/party/${createdParty.id}`
     navigator.clipboard.writeText(link)
     alert('Link copied to clipboard!')
   }
@@ -74,6 +95,13 @@ export default function CreateParty() {
       className="p-4 h-[100dvh] w-full md:p-6 overflow-hidden"
     >
       <div className="relative h-full w-full overflow-y-auto rounded-3xl">
+        <button 
+          onClick={() => navigate('/')}
+          className="absolute top-6 left-6 z-50 flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 text-sm text-white/70 backdrop-blur-md border border-white/30 transition-all hover:bg-black/40 hover:text-white"
+        >
+          ← Home
+        </button>
+
         <Background />
         
         <div className="flex min-h-full flex-col items-center justify-center px-sides py-12 pb-[var(--footer-safe-area)]">
@@ -121,15 +149,35 @@ export default function CreateParty() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-white/80">Time</label>
-                      <input
-                        required
-                        type="text"
-                        name="event_time"
-                        value={formData.event_time}
-                        onChange={handleChange}
-                        placeholder="10:00 AM"
-                        className="mt-1 w-full rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-white placeholder-white/50 focus:border-white focus:bg-white/20 focus:outline-none"
-                      />
+                      <div className="mt-1 flex gap-2">
+                        <select
+                          value={formData.event_time.split(':')[0]}
+                          onChange={(e) => handleTimeChange('hour', e.target.value)}
+                          className="w-full rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-white focus:border-white focus:bg-white/20 focus:outline-none appearance-none cursor-pointer text-center"
+                        >
+                          {HOURS.map(h => (
+                            <option key={h} value={h} className="text-black">{h}</option>
+                          ))}
+                        </select>
+                        <span className="flex items-center text-white/50">:</span>
+                        <select
+                          value={formData.event_time.split(' ')[0].split(':')[1]}
+                          onChange={(e) => handleTimeChange('minute', e.target.value)}
+                          className="w-full rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-white focus:border-white focus:bg-white/20 focus:outline-none appearance-none cursor-pointer text-center"
+                        >
+                          {MINUTES.map(m => (
+                            <option key={m} value={m} className="text-black">{m}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={formData.event_time.split(' ')[1]}
+                          onChange={(e) => handleTimeChange('period', e.target.value)}
+                          className="w-full rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-white focus:border-white focus:bg-white/20 focus:outline-none appearance-none cursor-pointer text-center"
+                        >
+                          <option value="AM" className="text-black">AM</option>
+                          <option value="PM" className="text-black">PM</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
@@ -207,7 +255,7 @@ export default function CreateParty() {
                     className="cursor-pointer rounded-xl border border-dashed border-white/40 bg-white/5 p-4 transition-all hover:bg-white/10"
                   >
                     <p className="font-mono text-xl text-white break-all">
-                      {window.location.origin}/SecretSanta/party/{createdParty.id}
+                      {window.location.origin}/SecretSanta/#/party/{createdParty.id}
                     </p>
                     <p className="mt-2 text-xs uppercase tracking-widest text-white/50">Click to Copy</p>
                   </div>

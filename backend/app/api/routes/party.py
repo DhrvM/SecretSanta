@@ -5,6 +5,7 @@ from app.schemas.party import (
     PartyResponse,
     PartyCreatedResponse,
     PartyAdminAction,
+    PartyUpdate,
 )
 from app.utils.matching import generate_matches
 from app.utils.email import send_match_email
@@ -63,6 +64,44 @@ def get_party(party_id: str):
     if not response.data:
         raise HTTPException(status_code=404, detail="Party not found")
     
+    return response.data[0]
+
+
+@router.patch("/{party_id}", response_model=PartyResponse)
+def update_party(party_id: str, update: PartyUpdate):
+    """Update party details. Requires master passcode."""
+    
+    # Verify passcode and get party
+    party_response = supabase.table("parties").select("passcode").eq("id", party_id).execute()
+    
+    if not party_response.data:
+        raise HTTPException(status_code=404, detail="Party not found")
+    
+    if party_response.data[0]["passcode"] != update.passcode:
+        raise HTTPException(status_code=403, detail="Invalid passcode")
+    
+    # Prepare data
+    data_to_update = {}
+    if update.name:
+        data_to_update["name"] = update.name
+    if update.description:
+        data_to_update["description"] = update.description
+    if update.budget is not None:
+        data_to_update["budget"] = update.budget
+    if update.event_date:
+        data_to_update["event_date"] = str(update.event_date)
+    if update.event_time:
+        data_to_update["event_time"] = str(update.event_time)
+        
+    if not data_to_update:
+        raise HTTPException(status_code=400, detail="No data to update")
+        
+    # Perform update
+    response = supabase.table("parties").update(data_to_update).eq("id", party_id).execute()
+    
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Failed to update party")
+        
     return response.data[0]
 
 

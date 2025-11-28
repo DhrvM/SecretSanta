@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Background } from '../components/Background'
 import { Footer } from '../components/Footer'
-import { getParty, getParticipants, getParticipantsAdmin, joinParty, removeParticipant, updateParticipant, lockParty, deleteParty } from '../services/api'
+import { getParty, getParticipants, getParticipantsAdmin, joinParty, removeParticipant, updateParticipant, lockParty, deleteParty, updateParty } from '../services/api'
 import { motion } from 'framer-motion'
 
 export default function PartyPage() {
@@ -23,6 +23,10 @@ export default function PartyPage() {
   // Editing state
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '' })
+
+  // Party Editing State
+  const [isEditingParty, setIsEditingParty] = useState(false)
+  const [editPartyForm, setEditPartyForm] = useState({})
 
   useEffect(() => {
     loadData()
@@ -100,6 +104,27 @@ export default function PartyPage() {
     }
   }
 
+  const startEditingParty = () => {
+    setEditPartyForm({
+      name: party.name,
+      description: party.description || '',
+      event_date: party.event_date,
+      event_time: party.event_time,
+      budget: party.budget
+    })
+    setIsEditingParty(true)
+  }
+
+  const savePartyEdit = async () => {
+    try {
+      const updated = await updateParty(id, passcode, editPartyForm)
+      setParty(updated)
+      setIsEditingParty(false)
+    } catch (err) {
+      alert(err.detail || 'Failed to update party')
+    }
+  }
+
   const handleLock = async () => {
     if (!confirm('This will close the party and send emails. Continue?')) return
     try {
@@ -133,30 +158,108 @@ export default function PartyPage() {
       className="p-4 h-[100dvh] w-full md:p-6 overflow-hidden"
     >
       <div className="relative h-full w-full overflow-y-auto rounded-3xl">
+        <button 
+          onClick={() => navigate('/')}
+          className="absolute top-6 left-6 z-50 flex items-center gap-2 rounded-full bg-black/20 px-4 py-2 text-sm text-white/70 backdrop-blur-md border border-white/30 transition-all hover:bg-black/40 hover:text-white"
+        >
+          ← Home
+        </button>
+        
         <Background />
         
         <div className="flex min-h-full flex-col px-sides py-12 pb-[var(--footer-safe-area)]">
           
           {/* Header */}
           <div className="mx-auto w-full max-w-4xl text-center mb-12">
-            <h1 className="font-serif text-[clamp(2.5rem,6vw,5rem)] leading-[0.9] tracking-tight text-white drop-shadow-lg mb-4">
-              {party.name}
-            </h1>
-            <p className="text-white/80 text-lg">{party.description}</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm font-medium text-white/90">
-              <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
-                📅 {new Date(party.event_date).toLocaleDateString()}
-              </span>
-              <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
-                🕒 {party.event_time.slice(0, 5)}
-              </span>
-              <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
-                💰 Budget: {party.budget} {party.currency}
-              </span>
-              <span className={`rounded-full px-4 py-1 backdrop-blur-sm border ${party.status ? 'bg-green-500/20 border-green-400/30' : 'bg-red-500/20 border-red-400/30'}`}>
-                {party.status ? '🟢 Open' : '🔒 Locked'}
-              </span>
-            </div>
+            {isEditingParty ? (
+              <div className="space-y-4 rounded-3xl border border-white/20 bg-black/20 p-8 backdrop-blur-xl text-left">
+                <h2 className="text-2xl font-serif text-white mb-4 text-center">Edit Party Details</h2>
+                
+                <div>
+                  <label className="block text-xs text-white/60 uppercase tracking-wider">Party Name</label>
+                  <input 
+                    value={editPartyForm.name}
+                    onChange={(e) => setEditPartyForm({...editPartyForm, name: e.target.value})}
+                    className="w-full rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-white focus:bg-white/20 outline-none text-xl font-serif"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/60 uppercase tracking-wider">Description</label>
+                  <textarea 
+                    value={editPartyForm.description}
+                    onChange={(e) => setEditPartyForm({...editPartyForm, description: e.target.value})}
+                    className="w-full rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-white focus:bg-white/20 outline-none"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs text-white/60 uppercase tracking-wider">Date</label>
+                    <input 
+                      type="date"
+                      value={editPartyForm.event_date}
+                      onChange={(e) => setEditPartyForm({...editPartyForm, event_date: e.target.value})}
+                      className="w-full rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-white focus:bg-white/20 outline-none [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 uppercase tracking-wider">Time</label>
+                    <input 
+                      value={editPartyForm.event_time}
+                      onChange={(e) => setEditPartyForm({...editPartyForm, event_time: e.target.value})}
+                      className="w-full rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-white focus:bg-white/20 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 uppercase tracking-wider">Budget</label>
+                    <input 
+                      type="number"
+                      value={editPartyForm.budget}
+                      onChange={(e) => setEditPartyForm({...editPartyForm, budget: parseInt(e.target.value)})}
+                      className="w-full rounded-lg bg-white/10 border border-white/20 px-4 py-2 text-white focus:bg-white/20 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 justify-center">
+                  <button 
+                    onClick={savePartyEdit}
+                    className="rounded-full bg-white px-8 py-2 font-medium text-black hover:scale-105 transition-transform"
+                  >
+                    Save Changes
+                  </button>
+                  <button 
+                    onClick={() => setIsEditingParty(false)}
+                    className="rounded-full border border-white/30 px-8 py-2 font-medium text-white hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h1 className="font-serif text-[clamp(2.5rem,6vw,5rem)] leading-[0.9] tracking-tight text-white drop-shadow-lg mb-4">
+                  {party.name}
+                </h1>
+                <p className="text-white/80 text-lg">{party.description}</p>
+                <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm font-medium text-white/90">
+                  <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
+                    📅 {new Date(party.event_date + 'T00:00:00').toLocaleDateString()}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
+                    🕒 {party.event_time}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-4 py-1 backdrop-blur-sm border border-white/20">
+                    💰 Budget: {party.budget} {party.currency}
+                  </span>
+                  <span className={`rounded-full px-4 py-1 backdrop-blur-sm border ${party.status ? 'bg-green-500/20 border-green-400/30' : 'bg-red-500/20 border-red-400/30'}`}>
+                    {party.status ? '🟢 Open' : '🔒 Locked'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mx-auto grid w-full max-w-5xl gap-8 md:grid-cols-2">
@@ -238,6 +341,14 @@ export default function PartyPage() {
                 <div className="rounded-3xl border border-red-500/30 bg-red-900/20 p-8 backdrop-blur-md">
                   <h2 className="mb-4 font-serif text-2xl text-white">Host Controls</h2>
                   <div className="space-y-3">
+                    {/* Edit Party Details Button */}
+                    <button 
+                      onClick={startEditingParty}
+                      className="w-full rounded-xl bg-white/10 py-3 font-medium text-white hover:bg-white/20 border border-white/10"
+                    >
+                      ✏️ Edit Party Details
+                    </button>
+                    
                     {party.status && (
                       <button 
                         onClick={handleLock}

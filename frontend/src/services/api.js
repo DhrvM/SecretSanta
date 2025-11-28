@@ -42,6 +42,16 @@ export async function joinParty(partyId, participantData) {
   return response.json()
 }
 
+export async function updateParty(partyId, passcode, data) {
+  const response = await fetch(`${API_URL}/party/${partyId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passcode, ...data }),
+  })
+  if (!response.ok) throw await response.json()
+  return response.json()
+}
+
 export async function deleteParty(partyId, passcode) {
   const response = await fetch(`${API_URL}/party/${partyId}`, {
     method: 'DELETE',

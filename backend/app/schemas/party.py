@@ -24,6 +24,16 @@ class PartyAdminAction(BaseModel):
     passcode: str
 
 
+class PartyUpdate(BaseModel):
+    """Schema for updating party details (admin only)"""
+    passcode: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+    budget: Optional[int] = None
+    event_date: Optional[date] = None
+    event_time: Optional[Union[time, str]] = None
+
+
 # --- Response Schemas ---
 
 class PartyResponse(BaseModel):
