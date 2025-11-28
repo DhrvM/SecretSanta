@@ -161,14 +161,16 @@ def resend_my_match(party_id: str, request: ResendMyMatch):
     if not participant.get('giftee_id'):
          raise HTTPException(status_code=400, detail="You have not been assigned a match yet.")
          
-    # Get giftee name
-    giftee_response = supabase.table("participants").select("name").eq("id", participant['giftee_id']).execute()
+    # Get giftee name and email
+    giftee_response = supabase.table("participants").select("name, email").eq("id", participant['giftee_id']).execute()
     if not giftee_response.data:
         raise HTTPException(status_code=500, detail="Match not found in database.")
         
-    giftee_name = giftee_response.data[0]['name']
+    giftee_data = giftee_response.data[0]
+    giftee_name = giftee_data['name']
+    giftee_email = giftee_data['email']
     
-    if send_match_email(participant, giftee_name, party):
+    if send_match_email(participant, giftee_name, giftee_email, party):
         return {"message": "Match email has been resent."}
     else:
         raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")

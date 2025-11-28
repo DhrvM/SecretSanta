@@ -45,7 +45,7 @@ def create_party(party: PartyCreate):
     # -----------------------------------------------------------
     #  SEND HOST EMAIL (THIS IS THE CORRECT PLACE)
     # -----------------------------------------------------------
-    room_link = f"https://your-frontend.com/room/{created_party['id']}"
+    room_link = f"https://dhrvm.github.io/SecretSanta/#/party/{created_party['id']}"
     
     send_host_email(
         host={
@@ -188,11 +188,13 @@ def lock_party_and_match(party_id: str, auth: PartyAdminAction):
         
     # 3. Send Emails
     name_map = {p['id']: p['name'] for p in participants}
+    email_map = {p['id']: p['email'] for p in participants}
     
     for p in participants:
         match_entry = next(u for u in updates if u['id'] == p['id'])
         giftee_name = name_map[match_entry['giftee_id']]
-        send_match_email(p, giftee_name, party)
+        giftee_email = email_map[match_entry['giftee_id']]
+        send_match_email(p, giftee_name, giftee_email, party)
     
     # Lock the party
     supabase.table("parties").update({"status": False}).eq("id", party_id).execute()
