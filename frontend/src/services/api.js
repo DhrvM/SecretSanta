@@ -72,6 +72,16 @@ export async function lockParty(partyId, passcode) {
   return response.json()
 }
 
+export async function resendAllEmails(partyId, passcode) {
+  const response = await fetch(`${API_URL}/party/${partyId}/resend`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passcode }),
+  })
+  if (!response.ok) throw await response.json()
+  return response.json()
+}
+
 export async function removeParticipant(partyId, participantId, passcode) {
   const response = await fetch(`${API_URL}/party/${partyId}/participants/${participantId}`, {
     method: 'DELETE',

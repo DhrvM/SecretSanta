@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Background } from '../components/Background'
 import { Footer } from '../components/Footer'
-import { getParty, getParticipants, getParticipantsAdmin, joinParty, removeParticipant, updateParticipant, lockParty, deleteParty, updateParty } from '../services/api'
+import { getParty, getParticipants, getParticipantsAdmin, joinParty, removeParticipant, updateParticipant, lockParty, deleteParty, updateParty, resendAllEmails } from '../services/api'
 import { motion } from 'framer-motion'
 
 export default function PartyPage() {
@@ -30,6 +30,7 @@ export default function PartyPage() {
   
   // Add loading state for locking
   const [isLocking, setIsLocking] = useState(false)
+  const [isResending, setIsResending] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -141,6 +142,21 @@ export default function PartyPage() {
       alert(err.detail || 'Failed to lock party')
     } finally {
       setIsLocking(false)
+    }
+  }
+
+  const handleResendAll = async () => {
+    if (isResending) return
+    if (!confirm('Resend all match emails to every participant?')) return
+
+    setIsResending(true)
+    try {
+      const res = await resendAllEmails(id, passcode)
+      alert(res.message || 'Resent match emails.')
+    } catch (err) {
+      alert(err.detail || 'Failed to resend emails')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -370,9 +386,13 @@ export default function PartyPage() {
                     )}
                     {!party.status && (
                       <button 
-                        className="w-full rounded-xl bg-blue-600/80 py-3 font-medium text-white hover:bg-blue-500"
+                        onClick={handleResendAll}
+                        disabled={isResending}
+                        className={`w-full rounded-xl py-3 font-medium text-white transition-colors ${
+                          isResending ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600/80 hover:bg-blue-500'
+                        }`}
                       >
-                        📧 Resend All Emails
+                        {isResending ? '⏳ Resending...' : '📧 Resend All Emails'}
                       </button>
                     )}
                     <button 

@@ -221,19 +221,23 @@ def resend_all_emails(party_id: str, auth: PartyAdminAction):
         raise HTTPException(status_code=400, detail="Matching has not started yet.")
     
     # Get participants
-    participants = supabase.table("participants").select("*").eq("party_id", party_id).execute().data
+    participants_response = supabase.table("participants").select("*").eq("party_id", party_id).execute()
+    participants = participants_response.data
     
     if not participants:
         return {"message": "No participants found."}
 
-    # Map names
-    name_map = {p['id']: p['name'] for p in participants}
+    # Map names and emails
+    name_map = {p["id"]: p["name"] for p in participants}
+    email_map = {p["id"]: p["email"] for p in participants}
     
     count = 0
     for p in participants:
-        if p.get('giftee_id'):
-            giftee_name = name_map.get(p['giftee_id'], "Unknown")
-            if send_match_email(p, giftee_name, party):
+        giftee_id = p.get("giftee_id")
+        if giftee_id:
+            giftee_name = name_map.get(giftee_id, "Unknown")
+            giftee_email = email_map.get(giftee_id)
+            if giftee_email and send_match_email(p, giftee_name, giftee_email, party):
                 count += 1
                 
     return {"message": f"Resent {count} emails."}
