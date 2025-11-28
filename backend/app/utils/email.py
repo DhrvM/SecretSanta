@@ -25,7 +25,9 @@ def send_email(to_email: str, subject: str, body_html: str):
     try:
         # Connect to Gmail SMTP (standard)
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as server:
+        # Switch to port 587 with STARTTLS
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls(context=context)
             server.login(sender_email, password)
             server.send_message(msg)
         print(f"✅ Email sent to {to_email}")
