@@ -7,11 +7,11 @@ export function Footer() {
 
   if (!isHome) {
     return (
-      <footer className="absolute bottom-0 left-0 right-0 p-inset">
-        <div className="flex items-center justify-center">
+      <footer className="absolute bottom-4 right-6 p-inset hidden md:block">
+        <div className="flex items-center justify-end">
           <a
             href="mailto:dhruv.malpani2005@gmail.com?subject=Bug Report: Secret Santa Matching"
-            className="text-sm text-white/50 hover:text-white hover:underline transition-colors"
+            className="text-xs text-white/30 hover:text-white/70 transition-colors backdrop-blur-sm rounded-full px-3 py-1 border border-white/10 bg-black/10"
           >
             See a bug?
           </a>
