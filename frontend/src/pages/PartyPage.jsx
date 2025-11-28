@@ -27,6 +27,9 @@ export default function PartyPage() {
   // Party Editing State
   const [isEditingParty, setIsEditingParty] = useState(false)
   const [editPartyForm, setEditPartyForm] = useState({})
+  
+  // Add loading state for locking
+  const [isLocking, setIsLocking] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -126,13 +129,18 @@ export default function PartyPage() {
   }
 
   const handleLock = async () => {
+    if (isLocking) return
     if (!confirm('This will close the party and send emails. Continue?')) return
+    
+    setIsLocking(true)
     try {
       await lockParty(id, passcode)
       loadData()
       alert('Party Locked & Emails Sent!')
     } catch (err) {
       alert(err.detail || 'Failed to lock party')
+    } finally {
+      setIsLocking(false)
     }
   }
 
@@ -352,9 +360,12 @@ export default function PartyPage() {
                     {party.status && (
                       <button 
                         onClick={handleLock}
-                        className="w-full rounded-xl bg-green-600/80 py-3 font-medium text-white hover:bg-green-500"
+                        disabled={isLocking}
+                        className={`w-full rounded-xl py-3 font-medium text-white transition-colors ${
+                          isLocking ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600/80 hover:bg-green-500'
+                        }`}
                       >
-                        🔒 Lock & Start Matching
+                         {isLocking ? '⏳ Matching...' : '🔒 Lock & Start Matching'}
                       </button>
                     )}
                     {!party.status && (
